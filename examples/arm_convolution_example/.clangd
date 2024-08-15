@@ -1,0 +1,4 @@
+CompileFlags:
+  CompilationDatabase: >-
+    /Users/jonasholmer/Projects/daisy/DaisyExamples/libDaisy/examples/arm_convolution_example/out/arm_convolution_example/ARMCM0
+  Add: []
