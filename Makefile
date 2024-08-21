@@ -1,5 +1,7 @@
 TARGET = libdaisy
 
+DEBUG=0
+
 MODULE_DIR=src
 
 C_MODULES = \
@@ -72,7 +74,7 @@ util/WaveTableLoader \
 # building variables
 ######################################
 DEBUG = 0
-OPT = -O3
+OPT ?= -O3
 
 #######################################
 # paths
@@ -201,6 +203,15 @@ Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usart.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_utils.c
 
+# DSP
+C_SOURCES += \
+Drivers/CMSIS/DSP/Source/SupportFunctions/SupportFunctions.c \
+Drivers/CMSIS/DSP/Source/CommonTables/arm_const_structs.c \
+Drivers/CMSIS/DSP/Source/CommonTables/arm_common_tables.c \
+Drivers/CMSIS/DSP/Source/TransformFunctions/TransformFunctions.c \
+Drivers/CMSIS/DSP/Source/ComplexMathFunctions/ComplexMathFunctions.c \
+
+
 # Middleware sources
 C_SOURCES += \
 Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c \
@@ -242,7 +253,7 @@ CXX = $(GCC_PATH)/$(PREFIX)g++
 AS = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
 CP = $(GCC_PATH)/$(PREFIX)objcopy
 SZ = $(GCC_PATH)/$(PREFIX)size
-AR = $(GCC_PATH)/$(PREFIX)ar
+AR = $(GCC_PATH)/$(PREFIX)gcc-ar
 GDB = $(GCC_PATH)/$(PREFIX)gdb
 else
 CC = $(PREFIX)gcc
@@ -250,7 +261,7 @@ CXX = $(PREFIX)g++
 AS = $(PREFIX)gcc -x assembler-with-cpp
 CP = $(PREFIX)objcopy
 SZ = $(PREFIX)size
-AR = $(PREFIX)ar
+AR = $(PREFIX)gcc-ar
 GDB = $(PREFIX)gdb
 endif
 HEX = $(CP) -O ihex
@@ -295,6 +306,8 @@ C_INCLUDES = \
 -I$(MODULE_DIR)/usbd \
 -I$(MODULE_DIR)/usbh \
 -IDrivers/CMSIS/Include \
+-IDrivers/CMSIS/DSP/Include \
+-IDrivers/CMSIS/DSP/PrivateInclude \
 -IDrivers/CMSIS/Device/ST/STM32H7xx/Include \
 -IDrivers/STM32H7xx_HAL_Driver/Inc \
 -IDrivers/STM32H7xx_HAL_Driver/Inc/Legacy \
@@ -311,16 +324,16 @@ WARNINGS += -Wall -Wno-attributes -Wno-strict-aliasing -Wno-maybe-uninitialized 
 CPP_WARNINGS += -Wno-register
 
 # compile gcc flags
-ASFLAGS = $(MCU) $(AS_INCLUDES) $(AS_DEFS) -ggdb $(WARNINGS) $(OPT) -fdata-sections -ffunction-sections
+ASFLAGS = $(MCU) $(AS_INCLUDES) $(AS_DEFS) $(WARNINGS) $(OPT) -fdata-sections -ffunction-sections -flto
 
-CFLAGS = $(MCU) $(C_INCLUDES) $(C_DEFS) -ggdb $(WARNINGS) $(OPT) -fasm -fdata-sections -ffunction-sections
+CFLAGS = $(MCU) $(C_INCLUDES) $(C_DEFS) $(WARNINGS) $(OPT) -fasm -fdata-sections -ffunction-sections -flto
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -ggdb
 OPT = -O0
 C_DEFS += -DDEBUG=1
 else
-C_DEFS += -DNDEBUG=1 -DRELEASE=1
+C_DEFS += -DRELEASE=1
 endif
 
 CFLAGS += \
@@ -330,7 +343,8 @@ CFLAGS += \
 CPPFLAGS = $(CFLAGS) $(CPP_WARNINGS)
 CPPFLAGS += \
 -fno-exceptions \
--fno-rtti
+-fno-rtti \
+-flto
 
 C_STANDARD = -std=gnu11
 CPP_STANDARD += -std=gnu++14
